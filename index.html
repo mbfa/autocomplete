@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title></title>
+        <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.9.2.custom.min.css" media="screen" />
+        <style>
+            body, div, ul, li { padding: 0; margin: 0; }
+            .ui-widget { margin: 50px; }
+            #noresult { display: none; }
+        </style>
+        <script src="js/jquery-1.8.3.min.js"></script>
+        <script src="js/jquery-ui-1.9.2.custom.min.js"></script>
+        <script src="js/jquery.mockjax.js"></script>
+        <script>
+(function($){
+    var Autocomplete = function(){
+        var initValue, noResult;
+        this.el = $('#genre');
+        noResult = $('#noresult');
+
+        this.el.autocomplete({
+            create: function(e, ui){
+                // The entry box would also have hit text when empty - enter genre here
+                var $this = $(this);
+                initValue = $this.val();
+                $this.focus(function(){
+                    if($this.val() == initValue){
+                        $this.val('');
+                    }
+                }).blur(function(){
+                    if($this.val() == ''){
+                        $this.val(initValue);
+                    }
+                });
+            },
+            source: function( request, response ) {
+                $.getJSON("/genre/search", {
+                        genre: request.term
+                    }, function( data ) {
+                        // not in the list
+                        if(!data.length){
+                            noResult.show();
+                        }
+                        response(data);
+                });
+            },
+            search: function(e, ui){
+                noResult.hide();
+            }
+        }); 
+    };
+
+    // Ajax call simulation
+
+    var genres = ["Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy", "Film-Noir", "Game-Show",
+"History", "Horror", "Music", "Musical", "Mystery", "News", "Reality-TV", "Romance", "Sci-Fi", "Sport", "Talk-Show", "Thriller", "War", "Western"];
+    $.mockjax({
+        url: '/genre/search',
+        response: function(settings) {
+            this.responseText = $.map(genres, function(genre){
+                if(genre.toLowerCase().indexOf(settings.data.genre.toLowerCase()) == -1){
+                    return null;
+                }
+                return genre;
+            });
+        }
+    });
+    $(function() {
+        Autocomplete();
+    });
+})(jQuery);
+        </script>
+    </head>
+    <body>
+        <div class="ui-widget">
+            <label for="genre">Genre:</label>
+            <input id="genre" value="enter genre here" />
+            <span id="noresult">Genre is not in the list</span>
+        </div>
+    </body>
+</html>
